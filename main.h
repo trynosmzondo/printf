@@ -1,71 +1,47 @@
-#include "main.h"
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
+#ifndef MAIN_H
+#define MAIN_H
 #include <stdarg.h>
-#include <string.h>
-
+#include <stdio.h>
 /**
- * error_format - returns error
- * @format: format
- * none
+ * struct vtype - struct vtype
+ * @tp: tp
+ * @f: function
+ *
  */
-
-void error_format(const char *format)
+typedef struct vtype
 {
-	if (!format || !*format)
-	{
-		write(1, "error", 6);
-		exit(98);
-	}
-}
-
-/**
- * _printf - trying to make printf2
- * @format: format of string
- * Return: number of chars printed
- */
-
-int _printf(const char *format, ...)
-{
-	int i, b_i, l_conv, flag;
-	char *buffer, *conv, *format_str;
-	va_list alist;
-
-	error_format(format);
-	buffer = malloc(BUF_LENGTH * sizeof(char));
-	_flush(buffer);
-	va_start(alist, format), flag = b_i = 0;
-	for (i = 0; format[i] != '\0';)
-	{
-		if (format[i] != '%')
-		{
-			fill_buffer(buffer, format + i, b_i, 1);
-			i += 1, b_i += 1;
-		}
-		if (format[i] == '%')
-		{
-			flag = 1, conv = grab_format(format + i);
-			if (format[i + 1] == '%' || conv == NULL)
-			{
-				flag = (flag == 0) ? 1 : 0;
-				fill_buffer(buffer, format + i, b_i, 1);
-				i += 2, b_i += 1;
-			}
-		}
-		if (flag == 1)
-		{
-			flag = 0;
-			conv = grab_format(format + i);
-			l_conv = _strlen(conv);
-			format_str = get_mstring_func(conv[l_conv - 1])(conv, alist);
-			free(conv);
-			fill_buffer(buffer, format_str, b_i, _strlen(format_str));
-			b_i = b_i + _strlen(format_str);
-			free(format_str), i += l_conv;
-		}
-	}
-		print_buffer(buffer, b_i);
-		free(buffer);
-		return (b_i);
-}
+	char tp;
+	void (*f)();
+} vtype_t;
+int _printf(const char *format, ...);
+void print_char(va_list valist);
+void print_int(va_list valist);
+void print_float(va_list valist);
+void print_string(va_list valist);
+void _write_buffer(char *buffer, int *index);
+int _strlen(char *s);
+char *_memcpy(char *dest, char *src, unsigned int n);
+void format_s(va_list valist, char *buffer, int *index);
+void format_c(va_list valist, char *buffer, int *index);
+void format_d(va_list valist, char *buffer, int *index);
+char *itos(char str[], long int num);
+char *utos(char str[], int num);
+int num_len(int num);
+int float_len(double f);
+void format_i(va_list valist, char *buffer, int *index);
+void format_u(va_list valist, char *buffer, int *index);
+void format_perc(va_list valist, char *buffer, int *index);
+void format_p(va_list valist, char *buffer, int *index);
+void format_lx(va_list valist, char *buffer, int *index);
+char *tostring(char str[], int num);
+int num_len(int num);
+void reset_buffer(char buffer[]);
+void *rot13(char *s);
+void rev_string(char *s);
+void format_h(va_list valist, char *buffer, int *index);
+void format_ch(va_list valist, char *buffer, int *index);
+void format_o(va_list valist, char *buffer, int *index);
+void format_b(va_list valist, char *buffer, int *index);
+void format_r(va_list valist, char *buffer, int *index);
+void format_R(va_list valist, char *buffer, int *index);
+#endif
