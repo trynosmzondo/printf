@@ -1,71 +1,51 @@
 #include "main.h"
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
 
 /**
- * error_format - returns error
- * @format: format
- * none
+ * _printf - formatted output conversion and print data.
+ * @format: input string.
+ *
+ * Return: number of chars printed.
  */
-
-void error_format(const char *format)
-{
-	if (!format || !*format)
-	{
-		write(1, "error", 6);
-		exit(98);
-	}
-}
-
-/**
- * _printf - trying to make printf2
- * @format: format of string
- * Return: number of chars printed
- */
-
 int _printf(const char *format, ...)
 {
-	int i, b_i, l_conv, flag;
-	char *buffer, *conv, *format_str;
-	va_list alist;
+	unsigned int i = 0, len = 0, ibuf = 0;
+	va_list arguments;
+	int (*function)(va_list, char *, unsigned int);
+	char *buffer;
 
-	error_format(format);
-	buffer = malloc(BUF_LENGTH * sizeof(char));
-	_flush(buffer);
-	va_start(alist, format), flag = b_i = 0;
-	for (i = 0; format[i] != '\0';)
+	va_start(arguments, format), buffer = malloc(sizeof(char) * 1024);
+	if (!format || !buffer || (format[i] == '%' && !format[i + 1]))
+		return (-1);
+	if (!format[i])
+		return (0);
+	for (i = 0; format && format[i]; i++)
 	{
-		if (format[i] != '%')
-		{
-			fill_buffer(buffer, format + i, b_i, 1);
-			i += 1, b_i += 1;
-		}
 		if (format[i] == '%')
 		{
-			flag = 1, conv = grab_format(format + i);
-			if (format[i + 1] == '%' || conv == NULL)
-			{
-				flag = (flag == 0) ? 1 : 0;
-				fill_buffer(buffer, format + i, b_i, 1);
-				i += 2, b_i += 1;
+			if (format[i + 1] == '\0')
+			{	print_buf(buffer, ibuf), free(buffer), va_end(arguments);
+				return (-1);
 			}
+			else
+			{	function = get_print_func(format, i + 1);
+				if (function == NULL)
+				{
+					if (format[i + 1] == ' ' && !format[i + 2])
+						return (-1);
+					handl_buf(buffer, format[i], ibuf), len++, i--;
+				}
+				else
+				{
+					len += function(arguments, buffer, ibuf);
+					i += ev_print_func(format, i + 1);
+				}
+			} i++;
 		}
-		if (flag == 1)
-		{
-			flag = 0;
-			conv = grab_format(format + i);
-			l_conv = _strlen(conv);
-			format_str = get_mstring_func(conv[l_conv - 1])(conv, alist);
-			free(conv);
-			fill_buffer(buffer, format_str, b_i, _strlen(format_str));
-			b_i = b_i + _strlen(format_str);
-			free(format_str), i += l_conv;
-		}
+		else
+			handl_buf(buffer, format[i], ibuf), len++;
+		for (ibuf = len; ibuf > 1024; ibuf -= 1024)
+			;
 	}
-		print_buffer(buffer, b_i);
-		free(buffer);
-		return (b_i);
+	print_buf(buffer, ibuf), free(buffer), va_end(arguments);
+	return (len);
 }
