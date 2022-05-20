@@ -1,49 +1,49 @@
 #include "main.h"
+
 /**
-  * _printf - function that prints based on format specifier
-  * @format: takes in format specifier
-  * Return: return pointer to index
-  */
+ * _printf - prints anything
+ * @format: the format string
+ *
+ * Return: number of bytes printed
+ */
 int _printf(const char *format, ...)
 {
-	char buffer[1024];
-	int i, j = 0, a = 0, *index = &a;
-	va_list valist;
-	vtype_t spec[] = {
-		{'c', format_c}, {'d', format_d}, {'s', format_s}, {'i', format_d},
-		{'u', format_u}, {'%', format_perc}, {'x', format_h}, {'X', format_ch},
-		{'o', format_o}, {'b', format_b}, {'p', format_p}, {'r', format_r},
-		{'R', format_R}, {'\0', NULL}
-	};
-	if (!format)
+	int sum = 0;
+	va_list ap;
+	char *p, *start;
+	params_t params = PARAMS_INIT;
+
+	va_start(ap, format);
+
+	if (!format || (format[0] == '%' && !format[1]))
 		return (-1);
-	va_start(valist, format);
-	for (i = 0; format[i] != '\0'; i++)
+	if (format[0] == '%' && format[1] == ' ' && !format[2])
+		return (-1);
+	for (p = (char *)format; *p; p++)
 	{
-		for (; format[i] != '%' && format[i] != '\0'; *index += 1, i++)
+		init_params(&params, ap);
+		if (*p != '%')
 		{
-			if (*index == 1024)
-			{	_write_buffer(buffer, index);
-				reset_buffer(buffer);
-				*index = 0;
-			}
-			buffer[*index] = format[i];
+			sum += _putchar(*p);
+			continue;
 		}
-		if (format[i] == '\0')
-			break;
-		if (format[i] == '%')
-		{	i++;
-			for (j = 0; spec[j].tp != '\0'; j++)
-			{
-				if (format[i] == spec[j].tp)
-				{	spec[j].f(valist, buffer, index);
-					break;
-				}
-			}
+		start = p;
+		p++;
+		while (get_flag(p, &params)) /* while char at p is flag char */
+		{
+			p++; /* next char */
 		}
+		p = get_width(p, &params, ap);
+		p = get_precision(p, &params, ap);
+		if (get_modifier(p, &params))
+			p++;
+		if (!get_specifier(p))
+			sum += print_from_to(start, p,
+				params.l_modifier || params.h_modifier ? p - 1 : 0);
+		else
+			sum += get_print_func(p, ap, &params);
 	}
-	va_end(valist);
-	buffer[*index] = '\0';
-	_write_buffer(buffer, index);
-	return (*index);
+	_putchar(BUF_FLUSH);
+	va_end(ap);
+	return (sum);
 }
